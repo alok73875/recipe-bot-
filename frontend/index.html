@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Recipe Bot - Healthy Indian & Global Recipes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            --primary-green: #2d5016;
+            --light-green: #4a7c59;
+            --accent-orange: #ff6b35;
+            --warm-beige: #f7f3e9;
+            --text-dark: #2c3e50;
+        }
+        
+        body { 
+            font-family: 'Inter', sans-serif; 
+            line-height: 1.6;
+        }
+        
+        .font-display { 
+            font-family: 'Playfair Display', serif; 
+        }
+        
+        .hero-gradient {
+            background: linear-gradient(135deg, var(--warm-beige) 0%, #e8f5e8 100%);
+        }
+        
+        .recipe-card {
+            transition: all 0.3s ease;
+            border-radius: 16px;
+            overflow: hidden;
+        }
+        
+        .recipe-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .category-pill {
+            background: var(--primary-green);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .difficulty-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        
+        .search-container {
+            background: white;
+            border-radius: 50px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            padding: 8px;
+        }
+        
+        .nav-link {
+            position: relative;
+            transition: color 0.3s ease;
+        }
+        
+        .nav-link:hover {
+            color: var(--accent-orange);
+        }
+        
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -4px;
+            left: 50%;
+            background: var(--accent-orange);
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+        
+        .nav-link:hover::after {
+            width: 100%;
+        }
+        
+        .recipe-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 24px;
+        }
+        
+        .featured-recipe {
+            grid-column: span 2;
+        }
+        
+        @media (max-width: 768px) {
+            .featured-recipe {
+                grid-column: span 1;
+            }
+        }
+        
+        .ingredient-tag {
+            background: #f0f9ff;
+            color: #0369a1;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            margin: 2px;
+            display: inline-block;
+        }
+        
+        .rating-stars {
+            color: #fbbf24;
+        }
+        
+        .cooking-time {
+            background: rgba(255, 107, 53, 0.1);
+            color: var(--accent-orange);
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .nutrition-badge {
+            background: rgba(45, 80, 22, 0.1);
+            color: var(--primary-green);
+            padding: 2px 6px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 500;
+        }
+        
+        .filter-chip {
+            background: white;
+            border: 2px solid #e5e7eb;
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .filter-chip:hover, .filter-chip.active {
+            background: var(--primary-green);
+            color: white;
+            border-color: var(--primary-green);
+        }
+        
+        .section-title {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: var(--accent-orange);
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <!-- Logo -->
+                <div class="flex items-center space-x-3">
+                    <div class="w-12 h-12 bg-gradient-to-br from-green-600 to-green-800 rounded-full flex items-center justify-center">
+                        <span class="text-white text-xl font-bold">🍃</span>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-display font-bold text-gray-900">AI Recipe Bot</h1>
+                        <p class="text-sm text-gray-600">Healthy & Delicious Recipes</p>
+                    </div>
+                </div>
+                
+                <!-- Navigation -->
+                <nav class="hidden md:flex space-x-8">
+                    <a href="#" class="nav-link text-gray-700 font-medium">Home</a>
+                    <a href="#recipes" class="nav-link text-gray-700 font-medium">Recipes</a>
+                    <a href="#categories" class="nav-link text-gray-700 font-medium">Categories</a>
+                    <a href="#healthy" class="nav-link text-gray-700 font-medium">Healthy</a>
+                    <a href="#meal-plans" class="nav-link text-gray-700 font-medium">Meal Plans</a>
+                    <a href="#tips" class="nav-link text-gray-700 font-medium">Tips</a>
+                </nav>
+                
+                <!-- User Actions -->
+                <div class="flex items-center space-x-4">
+                    <button class="p-2 text-gray-600 hover:text-gray-900 transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                        </svg>
+                    </button>
+                    <button class="p-2 text-gray-600 hover:text-gray-900 transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                        </svg>
+                    </button>
+                    <button class="md:hidden p-2 text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero-gradient py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h2 class="text-5xl font-display font-bold text-gray-900 mb-4">
+                    Discover <span class="text-green-700">Healthy</span> & 
+                    <span class="text-orange-500">Delicious</span> Recipes
+                </h2>
+                <p class="text-xl text-gray-700 max-w-3xl mx-auto mb-8">
+                    From traditional Indian cuisine to global favorites, find nutritious recipes that nourish your body and delight your taste buds
+                </p>
+                
+                <!-- Enhanced Search -->
+                <div class="search-container max-w-4xl mx-auto mb-8">
+                    <div class="flex flex-col md:flex-row gap-4">
+                        <div class="flex-1 relative">
+                            <input 
+                                type="text" 
+                                id="mainSearch"
+                                placeholder="Search for recipes, ingredients, or cuisines..."
+                                class="w-full px-6 py-4 text-lg border-0 rounded-full focus:outline-none focus:ring-2 focus:ring-green-500"
+                            >
+                            <button class="absolute right-4 top-1/2 transform -translate-y-1/2 bg-green-600 text-white p-2 rounded-full hover:bg-green-700 transition-colors">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Quick Filters -->
+                <div class="flex flex-wrap justify-center gap-3 mb-8">
+                    <button class="filter-chip active" onclick="filterRecipes('all')">All Recipes</button>
+                    <button class="filter-chip" onclick="filterRecipes('vegetarian')">🌱 Vegetarian</button>
+                    <button class="filter-chip" onclick="filterRecipes('vegan')">🌿 Vegan</button>
+                    <button class="filter-chip" onclick="filterRecipes('non-veg')">🍖 Non-Veg</button>
+                    <button class="filter-chip" onclick="filterRecipes('healthy')">💚 Healthy</button>
+                    <button class="filter-chip" onclick="filterRecipes('quick')">⚡ Quick</button>
+                    <button class="filter-chip" onclick="filterRecipes('indian')">🇮🇳 Indian</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured Recipe of the Day -->
+    <section class="py-16 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h3 class="section-title text-3xl font-display font-bold text-gray-900 mb-8">Recipe of the Day</h3>
+            
+            <div class="bg-gradient-to-r from-green-50 to-orange-50 rounded-3xl overflow-hidden shadow-lg">
+                <div class="grid md:grid-cols-2 gap-8 p-8">
+                    <div class="relative">
+                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%23f0f9ff'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-size='24' fill='%23374151'%3EHealthy Dal Tadka%3C/text%3E%3C/svg%3E" 
+                             alt="Healthy Dal Tadka" 
+                             class="w-full h-80 object-cover rounded-2xl">
+                        <div class="difficulty-badge">Easy</div>
+                        <div class="absolute bottom-4 left-4 flex space-x-2">
+                            <span class="category-pill">Vegetarian</span>
+                            <span class="category-pill">Healthy</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-col justify-center">
+                        <h4 class="text-3xl font-display font-bold text-gray-900 mb-4">Protein-Rich Dal Tadka</h4>
+                        <p class="text-gray-700 mb-6 text-lg leading-relaxed">
+                            A nutritious and flavorful lentil curry packed with protein, fiber, and essential nutrients. 
+                            This traditional Indian comfort food is perfect for a healthy weeknight dinner.
+                        </p>
+                        
+                        <div class="flex flex-wrap gap-4 mb-6">
+                            <div class="flex items-center space-x-2">
+                                <span class="text-2xl">⏱️</span>
+                                <span class="cooking-time">25 mins</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="text-2xl">👥</span>
+                                <span class="text-gray-600">Serves 4</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="rating-stars">★★★★★</span>
+                                <span class="text-gray-600">(4.8)</span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex flex-wrap gap-2 mb-6">
+                            <span class="nutrition-badge">High Protein</span>
+                            <span class="nutrition-badge">High Fiber</span>
+                            <span class="nutrition-badge">Low Fat</span>
+                            <span class="nutrition-badge">Gluten-Free</span>
+                        </div>
+                        
+                        <div class="flex space-x-4">
+                            <button class="bg-green-600 text-white px-8 py-3 rounded-full font-semibold hover:bg-green-700 transition-colors">
+                                View Recipe
+                            </button>
+                            <button class="border-2 border-green-600 text-green-600 px-8 py-3 rounded-full font-semibold hover:bg-green-50 transition-colors">
+                                Save Recipe
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Recipe Categories -->
+    <section id="categories" class="py-16 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h3 class="section-title text-3xl font-display font-bold text-gray-900 mb-8">Browse by Category</h3>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+                <div class="category-card bg-white rounded-2xl p-6 text-center hover:shadow-lg transition-shadow cursor-pointer" onclick="filterRecipes('breakfast')">
+                    <div class="text-4xl mb-3">🌅</div>
+                    <h4 class="font-semibold text-gray-900">Breakfast</h4>
+                    <p class="text-sm text-gray-600">120 recipes</p>
+                </div>
+                
+                <div class="category-card bg-white rounded-2xl p-6 text-center hover:shadow-lg transition-shadow cursor-pointer" onclick="filterRecipes('lunch')">
+                    <div class="text-4xl mb-3">🍽️</div>
+                    <h4 class="font-semibold text-gray-900">Lunch</h4>
+                    <p class="text-sm text-gray-600">200 recipes</p>
+                </div>
+                
+                <div class="category-card bg-white rounded-2xl p-6 text-center hover:shadow-lg transition-shadow cursor-pointer" onclick="filterRecipes('dinner')">
+                    <div class="text-4xl mb-3">🌙</div>
+                    <h4 class="font-semibold text-gray-900">Dinner</h4>
+                    <p class="text-sm text-gray-600">180 recipes</p>
+                </div>
+                
+                <div class="category-card bg-white rounded-2xl p-6 text-center hover:shadow-lg transition-shadow cursor-pointer" onclick="filterRecipes('snacks')">
+                    <div class="text-4xl mb-3">🍿</div>
+                    <h4 class="font-semibold text-gray-900">Snacks</h4>
+                    <p class="text-sm text-gray-600">95 recipes</p>
+                </div>
+                
+                <div class="category-card bg-white rounded-2xl p-6 text-center hover:shadow-lg transition-shadow cursor-pointer" onclick="filterRecipes('desserts')">
+                    <div class="text-4xl mb-3">🍰</div>
+                    <h4 class="font-semibold text-gray-900">Desserts</h4>
+                    <p class="text-sm text-gray-600">75 recipes</p>
+                </div>
+                
+                <div class="category-card bg-white rounded-2xl p-6 text-center hover:shadow-lg transition-shadow cursor-pointer" onclick="filterRecipes('beverages')">
+                    <div class="text-4xl mb-3">🥤</div>
+                    <h4 class="font-semibold text-gray-900">Beverages</h4>
+                    <p class="text-sm text-gray-600">60 recipes</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Recipe Grid -->
+    <section id="recipes" class="py-16 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center mb-8">
+                <h3 class="section-title text-3xl font-display font-bold text-gray-900">Latest Recipes</h3>
+                <div class="flex space-x-4">
+                    <select class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                        <option>Sort by Latest</option>
+                        <option>Most Popular</option>
+                        <option>Highest Rated</option>
+                        <option>Quick & Easy</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="recipe-grid" id="recipeGrid">
+                <!-- Recipe Card 1 -->
+                <div class="recipe-card bg-white shadow-lg">
+                    <div class="relative">
+                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 200'%3E%3Crect width='320' height='200' fill='%23fef3c7'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-size='16' fill='%23374151'%3ESpiced Quinoa Bowl%3C/text%3E%3C/svg%3E" 
+                             alt="Spiced Quinoa Bowl" 
+                             class="w-full h-48 object-cover">
+                        <div class="difficulty-badge">Easy</div>
+                        <button class="absolute top-3 left-3 p-2 bg-white bg-opacity-80 rounded-full hover:bg-opacity-100 transition-all">
+                            <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-3">
+                            <h4 class="text-xl font-semibold text-gray-900">Spiced Quinoa Power Bowl</h4>
+                            <div class="flex items-center">
+                                <span class="rating-stars text-sm">★★★★★</span>
+                                <span class="text-gray-500 text-sm ml-1">(4.9)</span>
+                            </div>
+                        </div>
+                        
+                        <p class="text-gray-600 mb-4">A nutritious bowl packed with protein-rich quinoa, roasted vegetables, and aromatic Indian spices.</p>
+                        
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <span class="ingredient-tag">Quinoa</span>
+                            <span class="ingredient-tag">Chickpeas</span>
+                            <span class="ingredient-tag">Spinach</span>
+                        </div>
+                        
+                        <div class="flex justify-between items-center mb-4">
+                            <div class="flex space-x-4 text-sm text-gray-600">
+                                <span class="flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    20 mins
+                                </span>
+                                <span class="flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                    </svg>
+                                    4 servings
+                                </span>
+                            </div>
+                            <div class="flex space-x-2">
+                                <span class="category-pill text-xs">Vegan</span>
+                                <span class="category-pill text-xs">Healthy</span>
+                            </div>
+                        </div>
+                        
+                        <button class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors">
+                            View Recipe
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Recipe Card 2 -->
+                <div class="recipe-card bg-white shadow-lg">
+                    <div class="relative">
+                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 200'%3E%3Crect width='320' height='200' fill='%23fecaca'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-size='16' fill='%23374151'%3EButter Chicken%3C/text%3E%3C/svg%3E" 
+                             alt="Healthy Butter Chicken" 
+                             class="w-full h-48 object-cover">
+                        <div class="difficulty-badge">Medium</div>
+                        <button class="absolute top-3 left-3 p-2 bg-white bg-opacity-80 rounded-full hover:bg-opacity-100 transition-all">
+                            <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-3">
+                            <h4 class="text-xl font-semibold text-gray-900">Healthy Butter Chicken</h4>
+                            <div class="flex items-center">
+                                <span class="rating-stars text-sm">★★★★☆</span>
+                                <span class="text-gray-500 text-sm ml-1">(4.7)</span>
+                            </div>
+                        </div>
+                        
+                        <p class="text-gray-600 mb-4">A lighter version of the classic Indian curry with coconut milk and Greek yogurt for creaminess.</p>
+                        
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <span class="ingredient-tag">Chicken</span>
+                            <span class="ingredient-tag">Coconut Milk</span>
+                            <span class="ingredient-tag">Tomatoes</span>
+                        </div>
+                        
+                        <div class="flex justify-between items-center mb-4">
+                            <div class="flex space-x-4 text-sm text-gray-600">
+                                <span class="flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    45 mins
+                                </span>
+                                <span class="flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                    </svg>
+                                    6 servings
+                                </span>
+                            </div>
+                            <div class="flex space-x-2">
+                                <span class="category-pill text-xs">Non-Veg</span>
+                                <span class="category-pill text-xs">Protein</span>
+                            </div>
+                        </div>
+                        
+                        <button class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors">
+                            View Recipe
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Recipe Card 3 -->
+                <div class="recipe-card bg-white shadow-lg">
+                    <div class="relative">
+                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 200'%3E%3Crect width='320' height='200' fill='%23d1fae5'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-size='16' fill='%23374151'%3EAvocado Toast%3C/text%3E%3C/svg%3E" 
+                             alt="Avocado Toast" 
+                             class="w-full h-48 object-cover">
+                        <div class="difficulty-badge">Easy</div>
+                        <button class="absolute top-3 left-3 p-2 bg-white bg-opacity-80 rounded-full hover:bg-opacity-100 transition-all">
+                            <svg class="w-4 h-4 text-red-500" fill="currentColor" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-3">
+                            <h4 class="text-xl font-semibold text-gray-900">Masala Avocado Toast</h4>
+                            <div class="flex items-center">
+                                <span class="rating-stars text-sm">★★★★★</span>
+                                <span class="text-gray-500 text-sm ml-1">(4.8)</span>
+                            </div>
+                        </div>
+                        
+                        <p class="text-gray-600 mb-4">Indian-spiced avocado toast with chaat masala, lime, and fresh herbs for a healthy breakfast.</p>
+                        
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <span class="ingredient-tag">Avocado</span>
+                            <span class="ingredient-tag">Chaat Masala</span>
+                            <span class="ingredient-tag">Lime</span>
+                        </div>
+                        
+                        <div class="flex justify-between items-center mb-4">
+                            <div class="flex space-x-4 text-sm text-gray-600">
+                                <span class="flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    10 mins
+                                </span>
+                                <span class="flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                    </svg>
+                                    2 servings
+                                </span>
+                            </div>
+                            <div class="flex space-x-2">
+                                <span class="category-pill text-xs">Vegan</span>
+                                <span class="category-pill text-xs">Quick</span>
+                            </div>
+                        </div>
+                        
+                        <button class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors">
+                            View Recipe
+                        </button>
+                    </div>
+                </div>
+
+                <!-- More recipe cards would go here -->
+                <div class="recipe-card bg-white shadow-lg">
+                    <div class="relative">
+                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 200'%3E%3Crect width='320' height='200' fill='%23fef3c7'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-size='16' fill='%23374151'%3ETandoori Salmon%3C/text%3E%3C/svg%3E" 
+                             alt="Tandoori Salmon" 
+                             class="w-full h-48 object-cover">
+                        <div class="difficulty-badge">Medium</div>
+                        <button class="absolute top-3 left-3 p-2 bg-white bg-opacity-80 rounded-full hover:bg-opacity-100 transition-all">
+                            <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-3">
+                            <h4 class="text-xl font-semibold text-gray-900">Tandoori Salmon</h4>
+                            <div class="flex items-center">
+                                <span class="rating-stars text-sm">★★★★☆</span>
+                                <span class="text-gray-500 text-sm ml-1">(4.6)</span>
+                            </div>
+                        </div>
+                        
+                        <p class="text-gray-600 mb-4">Omega-3 rich salmon marinated in yogurt and tandoori spices, grilled to perfection.</p>
+                        
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <span class="ingredient-tag">Salmon</span>
+                            <span class="ingredient-tag">Yogurt</span>
+                            <span class="ingredient-tag">Tandoori Masala</span>
+                        </div>
+                        
+                        <div class="flex justify-between items-center mb-4">
+                            <div class="flex space-x-4 text-sm text-gray-600">
+                                <span class="flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    35 mins
+                                </span>
+                                <span class="flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                    </svg>
+                                    4 servings
+                                </span>
+                            </div>
+                            <div class="flex space-x-2">
+                                <span class="category-pill text-xs">Seafood</span>
+                                <span class="category-pill text-xs">Healthy</span>
+                            </div>
+                        </div>
+                        
+                        <button class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors">
+                            View Recipe
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center mt-12">
+                <button class="bg-white border-2 border-green-600 text-green-600 px-8 py-3 rounded-full font-semibold hover:bg-green-50 transition-colors">
+                    Load More Recipes
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Healthy Living Tips -->
+    <section id="tips" class="py-16 bg-green-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h3 class="section-title text-3xl font-display font-bold text-gray-900 mb-8">Healthy Living Tips</h3>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="bg-white rounded-2xl p-6 shadow-lg">
+                    <div class="text-4xl mb-4">🥗</div>
+                    <h4 class="text-xl font-semibold mb-3">Balanced Nutrition</h4>
+                    <p class="text-gray-600">Learn how to create balanced meals with the right mix of proteins, carbs, and healthy fats.</p>
+                    <a href="#" class="text-green-600 font-medium mt-4 inline-block hover:text-green-700">Read More →</a>
+                </div>
+                
+                <div class="bg-white rounded-2xl p-6 shadow-lg">
+                    <div class="text-4xl mb-4">🏃‍♀️</div>
+                    <h4 class="text-xl font-semibold mb-3">Active Lifestyle</h4>
+                    <p class="text-gray-600">Discover simple ways to incorporate more movement and exercise into your daily routine.</p>
+                    <a href="#" class="text-green-600 font-medium mt-4 inline-block hover:text-green-700">Read More →</a>
+                </div>
+                
+                <div class="bg-white rounded-2xl p-6 shadow-lg">
+                    <div class="text-4xl mb-4">🧘‍♀️</div>
+                    <h4 class="text-xl font-semibold mb-3">Mindful Eating</h4>
+                    <p class="text-gray-600">Practice mindful eating habits to improve digestion and enjoy your meals more fully.</p>
+                    <a href="#" class="text-green-600 font-medium mt-4 inline-block hover:text-green-700">Read More →</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Newsletter Signup -->
+    <section class="py-16 bg-gradient-to-r from-green-600 to-green-800">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h3 class="text-3xl font-display font-bold text-white mb-4">Stay Updated with Healthy Recipes</h3>
+            <p class="text-xl text-green-100 mb-8">Get weekly recipe recommendations and nutrition tips delivered to your inbox</p>
+            
+            <div class="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
+                <input 
+                    type="email" 
+                    placeholder="Enter your email address"
+                    class="flex-1 px-6 py-3 rounded-full border-0 focus:outline-none focus:ring-2 focus:ring-white"
+                >
+                <button class="bg-orange-500 text-white px-8 py-3 rounded-full font-semibold hover:bg-orange-600 transition-colors">
+                    Subscribe
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-4 gap-8">
+                <div>
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center">
+                            <span class="text-white text-lg font-bold">🍃</span>
+                        </div>
+                        <h4 class="text-xl font-display font-bold">AI Recipe Bot</h4>
+                    </div>
+                    <p class="text-gray-400">Discover healthy and delicious recipes from around the world, powered by AI.</p>
+                </div>
+                
+                <div>
+                    <h5 class="font-semibold mb-4">Recipes</h5>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#" class="hover:text-white transition-colors">Vegetarian</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Non-Vegetarian</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Vegan</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Quick & Easy</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h5 class="font-semibold mb-4">Categories</h5>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#" class="hover:text-white transition-colors">Breakfast</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Lunch</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Dinner</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Snacks</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h5 class="font-semibold mb-4">Connect</h5>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/>
+                            </svg>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M22.46 6c-.77.35-1.6.58-2.46.69.88-.53 1.56-1.37 1.88-2.38-.83.5-1.75.85-2.72 1.05C18.37 4.5 17.26 4 16 4c-2.35 0-4.27 1.92-4.27 4.29 0 .34.04.67.11.98C8.28 9.09 5.11 7.38 3 4.79c-.37.63-.58 1.37-.58 2.15 0 1.49.75 2.81 1.91 3.56-.71 0-1.37-.2-1.95-.5v.03c0 2.08 1.48 3.82 3.44 4.21a4.22 4.22 0 0 1-1.93.07 4.28 4.28 0 0 0 4 2.98 8.521 8.521 0 0 1-5.33 1.84c-.34 0-.68-.02-1.02-.06C3.44 20.29 5.7 21 8.12 21 16 21 20.33 14.46 20.33 8.79c0-.19 0-.37-.01-.56.84-.6 1.56-1.36 2.14-2.23z"/>
+                            </svg>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.174-.105-.949-.199-2.403.041-3.439.219-.937 1.406-5.957 1.406-5.957s-.359-.72-.359-1.781c0-1.663.967-2.911 2.168-2.911 1.024 0 1.518.769 1.518 1.688 0 1.029-.653 2.567-.992 3.992-.285 1.193.6 2.165 1.775 2.165 2.128 0 3.768-2.245 3.768-5.487 0-2.861-2.063-4.869-5.008-4.869-3.41 0-5.409 2.562-5.409 5.199 0 1.033.394 2.143.889 2.741.099.12.112.225.085.345-.09.375-.293 1.199-.334 1.363-.053.225-.172.271-.402.165-1.495-.69-2.433-2.878-2.433-4.646 0-3.776 2.748-7.252 7.92-7.252 4.158 0 7.392 2.967 7.392 6.923 0 4.135-2.607 7.462-6.233 7.462-1.214 0-2.357-.629-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24.009 12.017 24.009c6.624 0 11.99-5.367 11.99-11.988C24.007 5.367 18.641.001.012.001z"/>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+                <p>&copy; 2024 AI Recipe Bot. All rights reserved. Made with ❤️ for healthy cooking.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Filter functionality
+        function filterRecipes(category) {
+            // Remove active class from all filter chips
+            document.querySelectorAll('.filter-chip').forEach(chip => {
+                chip.classList.remove('active');
+            });
+            
+            // Add active class to clicked chip
+            event.target.classList.add('active');
+            
+            // Here you would implement the actual filtering logic
+            console.log('Filtering by:', category);
+            
+            // Simulate loading
+            const recipeGrid = document.getElementById('recipeGrid');
+            recipeGrid.style.opacity = '0.5';
+            
+            setTimeout(() => {
+                recipeGrid.style.opacity = '1';
+                // Update recipes based on filter
+            }, 500);
+        }
+
+        // Search functionality
+        document.getElementById('mainSearch').addEventListener('input', function(e) {
+            const searchTerm = e.target.value;
+            console.log('Searching for:', searchTerm);
+            
+            // Implement search logic here
+            if (searchTerm.length > 2) {
+                // Perform search
+                console.log('Performing search...');
+            }
+        });
+
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Add to favorites functionality
+        document.querySelectorAll('.recipe-card button').forEach(button => {
+            if (button.querySelector('svg path[d*="4.318"]')) {
+                button.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const heart = this.querySelector('svg');
+                    const path = heart.querySelector('path');
+                    
+                    if (heart.classList.contains('text-red-500')) {
+                        heart.classList.remove('text-red-500');
+                        heart.classList.add('text-gray-600');
+                        path.setAttribute('fill', 'none');
+                    } else {
+                        heart.classList.remove('text-gray-600');
+                        heart.classList.add('text-red-500');
+                        path.setAttribute('fill', 'currentColor');
+                    }
+                });
+            }
+        });
+
+        // Recipe card click functionality
+        document.querySelectorAll('.recipe-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const recipeName = this.querySelector('h4').textContent;
+                console.log('Opening recipe:', recipeName);
+                // Here you would navigate to the recipe detail page
+            });
+        });
+
+        // Newsletter signup
+        document.querySelector('section button').addEventListener('click', function() {
+            const email = this.previousElementSibling.value;
+            if (email) {
+                alert('Thank you for subscribing! You\'ll receive our weekly newsletter soon.');
+                this.previousElementSibling.value = '';
+            }
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'978be0c5f3d59f50',t:'MTc1NjgwNDI2Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
