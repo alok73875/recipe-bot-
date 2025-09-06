@@ -1,7 +1,6 @@
 require('dotenv').config();
 
 const express = require('express');
-const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
@@ -34,14 +33,8 @@ app.use(express.urlencoded({ extended: true }));
 // Serve static files
 app.use(express.static('public'));
 
-// Database connection
-mongoose
-  .connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/ai-recipe-bot', {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-  .then(() => console.log('✅ Connected to MongoDB'))
-  .catch((err) => console.error('❌ MongoDB connection error:', err));
+// Database connection - skipping for development
+console.log('⚠️ Running in development mode without MongoDB');
 
 // Routes
 app.use('/api/recipes', recipeRoutes);
